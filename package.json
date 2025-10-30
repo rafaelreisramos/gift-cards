@@ -1,0 +1,22 @@
+{
+  "name": "gift-cards",
+  "version": "1.0.0",
+  "description": "Uma api de cartoes presente.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:prettier:check": "prettier --check .",
+    "lint:prettier:fix": "prettier --write .",
+    "lint:eslint:check": "npx eslint ."
+  },
+  "keywords": [],
+  "author": "Rafael Reis Ramos",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "9.38.0",
+    "eslint": "9.38.0",
+    "globals": "16.4.0",
+    "prettier": "3.6.2"
+  }
+}
