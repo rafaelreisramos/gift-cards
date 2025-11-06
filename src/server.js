@@ -2,7 +2,20 @@ import fastify from "fastify";
 import { routes } from "./routes/index.js";
 import { errorHandler } from "./controllers/index.js";
 
-const app = fastify({ logger: true });
+const loggerEnv = {
+  development: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+      },
+    },
+    production: true,
+    test: false,
+  },
+};
+
+const app = fastify({ logger: loggerEnv[process.env.NODE_ENV] ?? true });
 
 errorHandler(app);
 app.register(routes);
