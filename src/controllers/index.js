@@ -1,5 +1,5 @@
-export function createNotFoundHandler(api) {
-  return function notFoundHandler(req, reply) {
+export function errorHandler(app) {
+  app.setNotFoundHandler(function notFoundHandler(req, reply) {
     const rawUrl = req.raw?.url?.split("?")[0] ?? req.url;
     const httpMethods = [
       "GET",
@@ -12,40 +12,41 @@ export function createNotFoundHandler(api) {
     ];
 
     const allowed = httpMethods.filter((method) =>
-      api.hasRoute?.({ method, url: rawUrl })
+      app.hasRoute?.({ method, url: rawUrl })
     );
 
     if (allowed.length > 0) {
+      const methodNotAllowedError = {
+        statusCode: 405,
+        error: "Method Not Allowed",
+        message: `Method ${req.method} not allowed on ${req.url}`,
+        action: `Allowed methods: ${allowed.join(", ")}`,
+      };
+      req.log.warn(methodNotAllowedError.message);
       return reply
         .header("Allow", allowed.join(", "))
-        .code(405)
-        .send({
-          statusCode: 405,
-          error: "Method Not Allowed",
-          message: `Method ${req.method} not allowed on ${req.url}`,
-          action: `Allowed methods: ${allowed.join(", ")}`,
-          name: "MethodNotAllowedError",
-        });
+        .code(methodNotAllowedError.statusCode)
+        .send(methodNotAllowedError);
     }
 
-    return reply.code(404).send({
+    const notFoundError = {
       statusCode: 404,
       error: "Not Found",
       message: `Route ${req.url} not found`,
-      action: "Check the URL or method used",
-      name: "NotFoundError",
-    });
-  };
-}
+      action: "Check the URL",
+    };
+    req.log.warn(notFoundError.message);
+    return reply.code(notFoundError.statusCode).send(notFoundError);
+  });
 
-export function errorHandler(err, req, reply) {
-  const statusCode = err.statusCode || 500;
-  const errorName = err.name || "InternalServerError";
-  const errorMessage = err.message || "An unexpected error occurred";
-  return reply.code(statusCode).send({
-    statusCode: statusCode,
-    error: errorName.replace(/([a-z])([A-Z])/g, "$1 $2"),
-    message: errorMessage,
-    name: errorName,
+  app.setErrorHandler(function (err, req, reply) {
+    const statusCode = err.statusCode || 500;
+    req.log.error(err);
+    return reply.code(statusCode).send({
+      statusCode: statusCode,
+      error: "Internal Server Error",
+      message: "An unexpected error occurred",
+      action: "Contact support if the problem persists.",
+    });
   });
 }
